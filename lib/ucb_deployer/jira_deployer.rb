@@ -49,7 +49,6 @@ module UcbDeployer
     end
 
 
-  protected
 
     def cas_logout_url()
       "/casLogout.action"
@@ -141,7 +140,8 @@ module UcbDeployer
     end
     
     def seraph_config_xml_auth_class_token()
-      "com.atlassian.jira.security.login.JiraOsUserAuthenticator"
+      "com.atlassian.jira.security.login.JiraSeraphAuthenticator"
+      # "com.atlassian.jira.security.login.JiraOsUserAuthenticator"
     end
     
     def seraph_config_xml_logout_url_token()
@@ -188,7 +188,11 @@ module UcbDeployer
     def jira_home_token()
       "jira.home ="
     end
-    
+
+    def jira_projectkey_token()
+      "jira.projectkey.pattern ="
+    end
+
     ##
     # Sets the jira.home property in the file: jira-application.properties.
     #
@@ -197,6 +201,11 @@ module UcbDeployer
         if m = /(#{Regexp.quote(jira_home_token)})/.match(line)
           self.debug(m[0])
           new_str = "#{self.jira_home_token()} #{self.data_dir()}"
+          self.debug(new_str)
+          new_str
+        elsif m = /(#{Regexp.quote(jira_projectkey_token)})/.match(line)
+          self.debug(m[0])
+          new_str = "#{self.jira_projectkey_token()} ([A-Z][A-Z0-9]+)"
           self.debug(new_str)
           new_str
         else
@@ -226,8 +235,8 @@ module UcbDeployer
       FileUtils.cp(Dir["#{UcbDeployer::RESOURCES_DIR}/soulwing-casclient-*"],
                    "#{self.build_dir()}/src/edit-webapp/WEB-INF/lib/")
       # These have been placed in $CATALINA_HOME/lib
-      ["mail", "activation", "javamail", "commons-logging", "log4j"].each do |jar|
-        FileUtils.rm_rf(Dir["#{self.build_dir()}/src/webapp/WEB-INF/lib/#{jar}-*"])
+      ["mail", "activation", "javamail", "commons-logging", "log4j"].each do |jar_file|
+        FileUtils.rm_rf(Dir["#{self.build_dir()}/src/webapp/WEB-INF/lib/#{jar_file}-*"])
       end
     end
 

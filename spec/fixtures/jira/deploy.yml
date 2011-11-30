@@ -1,8 +1,7 @@
 build_dir: /path/to/build_dir/jira
 deploy_dir: /path/to/deploy_dir
 war_name: war_name
-svn_username: runner
-svn_project_url: svn.berkeley.edu/svn/ist-svn/berkeley/projects/ist/as/webapps/jira_archives/tags
+svn_project_url: svn+ssh://svn@code.berkeley.edu/istas/jira_archives/tags
 cas_server_url: https://auth.berkeley.edu/cas
 cas_service_url: https://wikihub.berkeley.edu
 data_dir: /path/to/data_dir

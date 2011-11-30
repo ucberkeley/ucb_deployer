@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ucb_deployer (0.4.5)
+    ucb_deployer (1.0.0)
       rake (= 0.8.7)
 
 GEM

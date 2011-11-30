@@ -17,7 +17,7 @@ describe UcbDeployer::ConfluenceDeployer do
       @cdep.build_dir.should == "/path/to/build_dir/confluence"
       @cdep.deploy_dir.should == "/path/to/deploy_dir"
       @cdep.war_name.should == "war_name"
-      @cdep.svn_project_url.should == "svn.berkeley.edu/svn/ist-svn/berkeley/projects/ist/as/webapps/confluence_archives/tags"
+      @cdep.svn_project_url.should == "svn+ssh://svn@code-qa.berkeley.edu/istas/confluence_archives/tags"
     end
 
     it "should raise error for invalid config options" do
@@ -113,7 +113,7 @@ describe UcbDeployer::ConfluenceDeployer do
       cdep = UcbDeployer::ConfluenceDeployer.new(@deploy_file)
       cdep.build_dir = test_build_dir
       cdep.version = "3.2.1_01"
-      arg = "svn export svn+ssh://#{cdep.svn_username}@#{cdep.svn_project_url}/confluence-#{cdep.version}"
+      arg = "svn export #{cdep.svn_project_url}/confluence-#{cdep.version}"
       cdep.should_receive("`").with(arg).and_return(nil)
       FileUtils.should_receive("mv")
       cdep.export()

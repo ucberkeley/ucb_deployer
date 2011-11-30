@@ -6,3 +6,5 @@ pkg
 .yardoc
 .rvmrc
 .idea
+ucb_deployer_git.iml
+*.log

@@ -4,134 +4,133 @@ require File.dirname(__FILE__) + '/../spec_helper'
 describe UcbDeployer::JiraDeployer do
   before(:each) do
     @deploy_file = File.expand_path(File.dirname(__FILE__) + '/../fixtures/jira/deploy.yml')
-    @bad_deploy_file = File.expand_path(File.dirname(__FILE__) + '/../fixtures/jira/bad_deploy.yml')    
-    @cdep = UcbDeployer::JiraDeployer.new(@deploy_file)
+    @bad_deploy_file = File.expand_path(File.dirname(__FILE__) + '/../fixtures/jira/bad_deploy.yml')
+    @jdep = UcbDeployer::JiraDeployer.new(@deploy_file)
   end
-  
+
   def test_build_dir()
     "#{TEST_BUILD_DIR}/jira"
   end
-  
-  
-  describe "#load_config" do
+
+
+  describe "configure()" do
     it "should load configuration options" do
-      @cdep.build_dir.should == "/path/to/build_dir/jira"
-      @cdep.deploy_dir.should == "/path/to/deploy_dir"
-      @cdep.war_name.should == "war_name"
-      @cdep.svn_project_url.should == "svn.berkeley.edu/svn/ist-svn/berkeley/projects/ist/as/webapps/jira_archives/tags"
+      @jdep.build_dir.should == "/path/to/build_dir/jira"
+      @jdep.deploy_dir.should == "/path/to/deploy_dir"
+      @jdep.war_name.should == "war_name"
+      @jdep.svn_project_url.should == "svn+ssh://svn@code.berkeley.edu/istas/jira_archives/tags"
     end
 
     it "should raise error for invalid config options" do
-      lambda { @cdep.load_config(@bad_deploy_file) }.should raise_error(UcbDeployer::ConfigError)
+      lambda { @jdep.load_config(@bad_deploy_file) }.should raise_error(UcbDeployer::ConfigError)
     end
-  end
-  
-  
-  describe "#config_web_xml" do
-    it "should configure souldwing (CAS auth) in web.xml" do
-      @cdep.build_dir = test_build_dir
-      # just checking if spec_helper did the right
-      File.exists?(@cdep.web_xml).should be_true
 
-      @cdep.config_web_xml
-      File.exists?(@cdep.web_xml).should be_true
-      lines = File.readlines(@cdep.web_xml)
+    it "should configure souldwing (CAS auth) in web.xml" do
+      @jdep.build_dir = test_build_dir
+      # just checking if spec_helper did the right
+      File.exists?(@jdep.web_xml).should be_true
+
+      @jdep.configure()
+      File.exists?(@jdep.web_xml).should be_true
+      lines = File.readlines(@jdep.web_xml)
       lines.grep(/<\?xml version="1\.0"\?>/).should be_true
       lines.grep(/^<web-app /).should be_true
-      lines.grep(/#{@cdep.cas_server_url}/).should have(1).record
-      lines.grep(/#{@cdep.cas_service_url}/).should have(1).record
-      lines.grep(/<\/web-app>/).should be_true            
+      lines.grep(/#{@jdep.cas_server_url}/).should have(1).record
+      lines.grep(/#{@jdep.cas_service_url}/).should have(1).record
+      lines.grep(/<\/web-app>/).should be_true
     end
-  end
-  
-  
-  describe "#config_seraph_config_xml" do
+
     it "should configure the soulwing (CAS) authenticator in seraph_config.xml" do
-      @cdep.build_dir = test_build_dir
+      @jdep.build_dir = test_build_dir
       # just checking if spec_helper did the right
-      File.exists?(@cdep.seraph_config_xml).should be_true
+      File.exists?(@jdep.seraph_config_xml).should be_true
 
-      @cdep.config_seraph_config_xml
-      File.exists?(@cdep.seraph_config_xml).should be_true
-      lines = File.readlines(@cdep.seraph_config_xml)
+      @jdep.configure()
+      File.exists?(@jdep.seraph_config_xml).should be_true
+      lines = File.readlines(@jdep.seraph_config_xml)
       lines.grep(/<security-config>/).should be_true
-      lines.grep(/#{Regexp.quote(@cdep.cas_authenticator_class)}/).should have(1).record
-      lines.grep(/#{Regexp.quote(@cdep.cas_server_url)}\/logout/).should have(1).record
-      lines.grep(/<\/security-config>/).should be_true            
+      lines.grep(/#{Regexp.quote(@jdep.cas_authenticator_class)}/).should have(1).record
+      lines.grep(/#{Regexp.quote(@jdep.cas_server_url)}\/logout/).should have(1).record
+      lines.grep(/<\/security-config>/).should be_true
     end
-  end
-  
 
-  describe "#config_entityengine_xml" do
     it "should configure the postgres72 db option in entityengine.xml" do
-      @cdep.build_dir = test_build_dir
+      @jdep.build_dir = test_build_dir
       # just checking if spec_helper did the right
-      File.exists?(@cdep.entityengine_xml).should be_true
+      File.exists?(@jdep.entityengine_xml).should be_true
 
-      @cdep.config_entityengine_xml
-      File.exists?(@cdep.entityengine_xml).should be_true
-      lines = File.readlines(@cdep.entityengine_xml)
+      @jdep.configure()
+      File.exists?(@jdep.entityengine_xml).should be_true
+      lines = File.readlines(@jdep.entityengine_xml)
       lines.any? { |l| l =~ /<entity-config>/ }.should be_true
-      lines.any? { |l| l =~ /#{Regexp.quote(@cdep.entityengine_db)}/ }.should be_true
-      lines.any? { |l| l =~ /#{Regexp.quote(@cdep.entityengine_schema)}/ }.should be_true      
-      lines.any? { |l| l =~ /<\/entity-config>/ }.should be_true            
+      lines.any? { |l| l =~ /#{Regexp.quote(@jdep.entityengine_db)}/ }.should be_true
+      lines.any? { |l| l =~ /#{Regexp.quote(@jdep.entityengine_schema)}/ }.should be_true
+      lines.any? { |l| l =~ /<\/entity-config>/ }.should be_true
     end
-  end
-  
-  describe "#config_jira_application_properties" do
-    it "should configure jira.home in the jira-application.properties file" do
-      @cdep.build_dir = test_build_dir
-      # just checking if spec_helper did the right
-      File.exists?(@cdep.jira_application_properties).should be_true
-      
-      @cdep.config_jira_application_properties
-      File.exists?(@cdep.jira_application_properties).should be_true
-      lines = File.readlines(@cdep.jira_application_properties)
-      lines.any? { |l| l =~ /# JIRA HOME/ }.should be_true
-      lines.any? { |l| l =~ /# JIRA SECURITY SETTINGS/ }.should be_true
-      lines.any? { |l| l =~ /#{Regexp.quote(@cdep.jira_home_token + ' ' + @cdep.data_dir)}/ }.should be_true      
-      lines.any? { |l| l =~ /# NOTES FOR DEVELOPERS/ }.should be_true            
+
+    context "jira-application.properties file" do
+      it "should configure jira.home" do
+        @jdep.build_dir = test_build_dir()
+        # just checking if spec_helper did the right
+        File.exists?(@jdep.jira_application_properties).should be_true
+
+        @jdep.configure()
+        File.exists?(@jdep.jira_application_properties).should be_true
+        lines = File.readlines(@jdep.jira_application_properties)
+        lines.any? { |l| l =~ /# JIRA HOME/ }.should be_true
+        lines.any? { |l| l =~ /# JIRA SECURITY SETTINGS/ }.should be_true
+        lines.any? { |l| l =~ /#{Regexp.quote(@jdep.jira_home_token + ' ' + @jdep.data_dir)}/ }.should be_true
+        lines.any? { |l| l =~ /# NOTES FOR DEVELOPERS/ }.should be_true
+      end
+
+      it "should configure jira.projectkey.pattern" do
+        @jdep.build_dir = test_build_dir()
+        # just checking if spec_helper did the right
+        File.exists?(@jdep.jira_application_properties()).should be_true
+
+        @jdep.configure()
+        File.exists?(@jdep.jira_application_properties).should be_true
+        lines = File.readlines(@jdep.jira_application_properties)
+        lines.any? { |l| l =~ /# JIRA HOME/ }.should be_true
+        lines.any? { |l| l =~ /# JIRA SECURITY SETTINGS/ }.should be_true
+        lines.any? { |l| l =~ /#{Regexp.quote(@jdep.jira_projectkey_token() + ' ' + "([A-Z][A-Z0-9]+)")}/ }.should be_true
+        lines.any? { |l| l =~ /# NOTES FOR DEVELOPERS/ }.should be_true
+      end
     end
-  end
-  
-  describe "#config_ist_banner" do
+
     it "should place ist_banner.jpg in webapps" do
-      @cdep.build_dir = test_build_dir()
-      @cdep.config_ist_banner()
-      File.exists?("#{@cdep.build_dir}/src/webapp/images/ist_banner.jpg").should be_true
+      @jdep.build_dir = test_build_dir()
+      @jdep.configure()
+      File.exists?("#{@jdep.build_dir}/src/webapp/images/ist_banner.jpg").should be_true
     end
-  end
-  
-  describe "#reshuffle_jars" do
-    it "should work" do
-      @cdep.build_dir = test_build_dir()
-      @cdep.reshuffle_jars()
-      Dir["#{@cdep.build_dir}/src/edit-webapp/WEB-INF/lib/soulwing-casclient-*"].should_not be_empty
+
+    it "should reshuffle jar files" do
+      @jdep.build_dir = test_build_dir()
+      @jdep.configure()
+      Dir["#{@jdep.build_dir}/src/edit-webapp/WEB-INF/lib/soulwing-casclient-*"].should_not be_empty
       ["activation", "javamail", "commons-logging", "log4j"].each do |lib|
-        Dir["#{@cdep.build_dir}/src/edit-webapp/WEB-INF/lib/#{lib}-*"].should be_empty
+        Dir["#{@jdep.build_dir}/src/edit-webapp/WEB-INF/lib/#{lib}-*"].should be_empty
       end
     end
   end
 
-  
   describe "#build" do
-    it "should work" do
-      @cdep.build_dir = test_build_dir()
-      @cdep.should_receive("`").with("sh #{@cdep.build_dir}/src/build.sh")
-      @cdep.build()
+    it "should build the the war" do
+      @jdep.build_dir = test_build_dir()
+      @jdep.should_receive("`").with("sh #{@jdep.build_dir}/src/build.sh")
+      @jdep.build()
     end
   end
-  
 
   describe "#export" do
-    it "should work" do
-      cdep = UcbDeployer::JiraDeployer.new(@deploy_file)
-      cdep.build_dir = test_build_dir()
-      cdep.version = "3.2.1_01"
-      arg = "svn export svn+ssh://#{cdep.svn_username}@#{cdep.svn_project_url}/jira-#{cdep.version}"
-      cdep.should_receive("`").with(arg).and_return(nil)
+    it "should export the code from svn" do
+      jdep = UcbDeployer::JiraDeployer.new(@deploy_file)
+      jdep.build_dir = test_build_dir()
+      jdep.version = "3.2.1_01"
+      arg = "svn export #{jdep.svn_project_url}/jira-#{jdep.version}"
+      jdep.should_receive("`").with(arg).and_return(nil)
       FileUtils.should_receive("mv")
-      cdep.export()
+      jdep.export()
     end
   end
 end
