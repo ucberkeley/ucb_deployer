@@ -1,0 +1,74 @@
+#!/usr/bin/env ruby
+
+require 'pp'
+require 'rubygems'
+require 'rake'
+# $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__) + '/../lib'))
+require 'ucb_deployer'
+
+
+Rake.application.init("ucb_deploy")
+
+USAGE = "Usage: deployer <task> APP=<confluence|jira> VERSION=x.x.x"
+
+task :default => :deploy
+
+desc "Deploy the application"
+task :deploy => [:build] do
+  @deployer.deploy()
+end
+
+desc "Build the application"
+task :build => [:configure] do
+  @deployer.build()
+end
+
+desc "Configure the build"
+task :configure => [:export] do
+  @deployer.configure()
+end
+
+desc "Export code into the build directory"
+task :export => [:init, :check_version] do
+  Rake::Task["disable_web"].invoke
+  @deployer.version = ENV["VERSION"]
+  @deployer.export()
+end
+
+task :init => [:check_app] do
+  begin
+    UcbDeployer.debug_mode = true if ENV["DEBUG"]
+    @deployer = UcbDeployer.factory(ENV["APP"].to_sym)
+  rescue UcbDeployer::ConfigError => e
+    $stderr.puts(USAGE)
+    $stderr.puts(e.message)    
+    exit(1)
+  end
+end
+
+desc "Remove the maintenance file"
+task :enable_web => [:init]  do
+  @deployer.enable_web()  
+end
+
+desc "Display maintenance file that gets picked up by Apache"
+task :disable_web => [:init]  do
+  @deployer.disable_web()  
+end
+
+task :check_version do
+  if ENV["VERSION"].nil?
+    $stderr.puts(USAGE)
+    exit(1)
+  end
+end
+
+task :check_app do
+  if ENV["APP"].nil?
+    $stderr.puts(USAGE)
+    exit(1)
+  end
+end
+
+
+Rake.application.top_level

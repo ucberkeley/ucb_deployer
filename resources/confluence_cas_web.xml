@@ -1,0 +1,103 @@
+
+<!-- CAS Configuration --> 
+<context-param>
+  <param-name>casServerUrl</param-name>
+  <param-value><%= cas_server_url %></param-value>
+</context-param>
+<context-param>
+  <param-name>casServiceUrl</param-name>
+  <param-value><%= cas_service_url %></param-value>
+</context-param>
+
+<listener>
+  <listener-class>org.soulwing.cas.filter.ProtocolConfigurationListener</listener-class>
+</listener>
+
+<filter>
+  <filter-name>CAS-Session-Bypass</filter-name>
+  <filter-class>org.soulwing.cas.filter.SessionBypassFilter</filter-class>
+  <init-param>
+    <param-name>logoutPath</param-name>
+    <param-value>/logout.action</param-value>
+  </init-param>
+  <init-param>
+    <param-name>applicationLogout</param-name>
+    <param-value>true</param-value>
+  </init-param>
+  <init-param>
+    <param-name>globalLogout</param-name>
+    <param-value>true</param-value>
+  </init-param>
+  <init-param>
+    <param-name>bypassPaths</param-name>
+    <param-value>
+      /sr/jira.issueviews:searchrequest*
+    </param-value>
+  </init-param>
+</filter>
+
+<filter>
+  <filter-name>CAS-Simple-Bypass</filter-name>
+  <filter-class>org.soulwing.cas.filter.SimpleBypassFilter</filter-class>
+  <init-param>
+    <param-name>bypassPaths</param-name>
+    <param-value>
+      /logout.action, /rpc/*, /images/*, /styles/*, /createrssfeed.action
+    </param-value>
+  </init-param>
+</filter>
+
+<filter>
+  <filter-name>CAS-Service-Validation</filter-name>
+  <filter-class>org.soulwing.cas.filter.ServiceValidationFilter</filter-class>
+  <init-param>
+    <param-name>filterPath</param-name>
+    <param-value>/login.action</param-value>
+  </init-param>
+  <init-param>
+    <param-name>postValidationRedirectParameter</param-name>
+    <param-value>os_destination</param-value>
+  </init-param>
+</filter>
+
+<filter>
+  <filter-name>CAS-Logout</filter-name>
+  <filter-class>
+    org.soulwing.cas.filter.LogoutFilter
+  </filter-class>
+  <init-param>
+    <param-name>logoutPath</param-name>
+    <param-value>/logout.action</param-value>
+  </init-param>
+  <init-param>
+    <param-name>applicationLogout</param-name>
+    <param-value>true</param-value>
+  </init-param>
+  <init-param>
+    <param-name>globalLogout</param-name>
+    <param-value>false</param-value>
+  </init-param>
+</filter>
+
+<filter-mapping>
+  <filter-name>CAS-Logout</filter-name>
+  <url-pattern>/*</url-pattern>
+</filter-mapping>
+
+<filter-mapping>
+  <filter-name>CAS-Session-Bypass</filter-name>
+  <url-pattern>/*</url-pattern>
+</filter-mapping>
+
+<filter-mapping>
+  <filter-name>CAS-Simple-Bypass</filter-name>
+  <url-pattern>/*</url-pattern>
+</filter-mapping>
+
+<filter-mapping>
+  <filter-name>CAS-Service-Validation</filter-name>
+  <url-pattern>/*</url-pattern>
+</filter-mapping>
+<!-- end CAS Configuration --> 
+
+
