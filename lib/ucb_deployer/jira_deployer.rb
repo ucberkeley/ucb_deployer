@@ -21,7 +21,7 @@ module UcbDeployer
       self.info("Configuring application.")
       self.config_web_xml()
       self.config_seraph_config_xml()
-      self.config_entityengine_xml()
+      # self.config_entityengine_xml()
       self.config_jira_application_properties()
       self.config_ist_banner()
       self.reshuffle_jars()

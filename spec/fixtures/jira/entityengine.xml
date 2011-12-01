@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE entity-config PUBLIC "-//OFBiz//DTD Entity Engine Config//EN" "http://www.ofbiz.org/dtds/entity-config.dtd">
 <!--
 This file configures the OFBiz Entity Engine which JIRA uses to store persist data in a datasource.
 
@@ -71,44 +70,13 @@ If you not using the 12 preconfigured DBs, you may also need to add your own fie
         <field name="position" type="integer"/> to <field name="position" col-name="POSITION_" type="integer"/>
     -->
     <field-type name="frontbase" loader="maincp" location="entitydefs/fieldtype-frontbase.xml"/>
+    <!--
 
+    DATASOURCE
 
-    <!-- DATASOURCE - You will need to update this tag for your installation.
-
-        1. Update field-type-name attribute to match your database.
-           Possible values include: cloudscape, db2, firebird, frontbase, hsql, mckoidb, mysql, mssql, oracle10g, oracle, postgres, postgres72, sapdb, sybase
-        2. If using Orion or JBoss you will need to customize the <jndi-jdbc> tag.
-           See http://www.atlassian.com/software/jira/docs/latest/servers/
-        3. If using Postgres 7.3+ (schema-aware), use:
-               field-type-name="postgres72"
-           and:
-               schema-name="public"
-           in the datasource attribute list below.
-        4. If using DB2, add:
-             constraint-name-clip-length="15"
-           to the datasource attribute list below, and an appropriate schema-name attribute, eg:
-             schema-name="DB2INST1"
-        5. If not using HSQLDB remove:
-             schema-name="PUBLIC"
-
-        PLEASE DO NOT CHANGE the datasource name from
-        defaultDS unless instructed to by Atlassian Support.
-
-        PLEASE DO NOT set the use-foreign-key* values to "true" as JIRA does not currently support this.
+    You should no longer define a datasource in this file, the database is now configured through the UI at setup time.
+    The only time you would want to configure it here is when you migrate from an older version and need to point the
+    new installation at an existing db. This is considered a legacy method and will not work if dbconfig.xml exists
+    in the home directory.
      -->
-    <datasource name="defaultDS" field-type-name="hsql"
-      schema-name="PUBLIC"
-      helper-class="org.ofbiz.core.entity.GenericHelperDAO"
-      check-on-start="true"
-      use-foreign-keys="false"
-      use-foreign-key-indices="false"
-      check-fks-on-start="false"
-      check-fk-indices-on-start="false"
-      add-missing-on-start="true"
-      check-indices-on-start="true">
-        <jndi-jdbc jndi-server-name="default" jndi-name="java:comp/env/jdbc/JiraDS"/>
-<!-- Orion format: <jndi-jdbc jndi-server-name="default" jndi-name="jdbc/JiraDS"/> -->
-<!-- JBoss format: <jndi-jdbc jndi-server-name="default" jndi-name="java:/DefaultDS"/> -->
-<!-- Weblogic format: <jndi-jdbc jndi-server-name="default" jndi-name="JiraDS"/> -->
-    </datasource>
 </entity-config>

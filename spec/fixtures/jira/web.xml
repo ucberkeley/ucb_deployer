@@ -13,16 +13,57 @@
     <!-- =====================================================
          THIS MUST BE THE FIRST FILTER IN THE DEFINED CHAIN
          ===================================================== -->
+    <!-- This *has* to come first to ensure no other filter runs before this trying to access the ComponentManager
+         since that can cause deadlocks during a data import -->
+    <filter>
+        <filter-name>JiraImportProgressFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.JiraImportProgressFilter</filter-class>
+    </filter>
+
     <filter>
         <filter-name>JiraFirstFilter</filter-name>
         <filter-class>com.atlassian.jira.web.filters.JiraFirstFilter</filter-class>
     </filter>
-    
+
+    <filter>
+        <filter-name>MultiTenantFilter</filter-name>
+        <filter-class>com.atlassian.multitenant.servlet.MultiTenantServletFilter</filter-class>
+    </filter>
+
     <!-- If serious problems were encountered on Startup, this filter will display an
             appropriate error message for any requests. Basically it locks JIRA. -->
     <filter>
         <filter-name>JiraStartupChecklist</filter-name>
         <filter-class>com.atlassian.jira.startup.JiraStartupChecklistFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>active-requests-filter</filter-name>
+        <filter-class>com.atlassian.jira.web.monitor.ActiveRequestsFilter</filter-class>
+
+        <!-- register in JMX using this object name -->
+        <init-param>
+            <param-name>jmx.name</param-name>
+            <param-value>com.atlassian.jira:name=Requests</param-value>
+        </init-param>
+
+        <!-- create a log entry if a request takes more than this number of ms (default: 5s. 0 to disable) -->
+        <init-param>
+            <param-name>request.log.threshold</param-name>
+            <param-value>15000</param-value>
+        </init-param>
+
+        <!-- create a thread dump if a request takes more than this number of ms (default: 30s. 0 to disable) -->
+        <init-param>
+            <param-name>request.dumpthreads.threshold</param-name>
+            <param-value>0</param-value>
+        </init-param>
+
+        <!-- save the thread dump in the logs directory -->
+        <init-param>
+            <param-name>request.dumpthreads.dir</param-name>
+            <param-value>${catalina.base}/logs</param-value>
+        </init-param>
     </filter>
 
     <filter>
@@ -73,17 +114,6 @@
         </init-param>
     </filter>
 
-    <filter>
-        <filter-name>request-cleanup</filter-name>
-        <filter-class>com.atlassian.jira.web.filters.RequestCleanupFilter</filter-class>
-    </filter>
-
-    <!-- this filter sets an attribute in the request to stop JiraWebworkActionDispatcher from popping all actions off the stack.
-    It will clear the action stack AFTER the sitemesh decorator has rendered the page.-->
-    <filter>
-        <filter-name>action-cleanup-delay</filter-name>
-        <filter-class>com.atlassian.jira.web.filters.ActionCleanupDelayFilter</filter-class>
-    </filter>
 
     <filter>
         <filter-name>filter-plugin-dispatcher-before-decoration-request</filter-name>
@@ -159,6 +189,11 @@
     <filter>
         <filter-name>encoding</filter-name>
         <filter-class>com.atlassian.jira.web.filters.PathMatchingEncodingFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>postencoding</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.JiraPostEncodingFilter</filter-class>
     </filter>
 
     <filter>
@@ -349,7 +384,7 @@
     </filter>
 
     <!-- =====================================================
-         THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN 
+         THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN
          ===================================================== -->
     <filter>
         <filter-name>JiraLastFilter</filter-name>
@@ -357,14 +392,27 @@
     </filter>
 
     <!-- =====================================================
-         FILTER MAPPINGS FOLLOW : 
+         FILTER MAPPINGS FOLLOW :
          ===================================================== -->
+
+    <!-- This *has* to come first to ensure no other filter runs before this trying to access the ComponentManager
+         since that can cause deadlocks during a data import -->
+    <filter-mapping>
+        <filter-name>JiraImportProgressFilter</filter-name>
+        <url-pattern>/importprogress</url-pattern>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>JiraFirstFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <filter-mapping>
+        <filter-name>MultiTenantFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>ERROR</dispatcher>
+    </filter-mapping>
     <!-- If serious problems were encountered on Startup, this filter will display an
             appropriate error message for any requests. Basically it locks JIRA. -->
     <filter-mapping>
@@ -372,6 +420,10 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <filter-mapping>
+        <filter-name>active-requests-filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
     <!-- THIS MUST REMAIN AS THE TOP FILTER SO THAT THE ENCODING CAN BE SET BEFORE ANYTHING ELSE TOUCHES IT -->
     <filter-mapping>
@@ -395,6 +447,11 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
     -->
+
+    <filter-mapping>
+        <filter-name>postencoding</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>filter-plugin-dispatcher-after-encoding-request</filter-name>
@@ -505,17 +562,6 @@
         <url-pattern>/rpc/xmlrpc</url-pattern>
     </filter-mapping>
 
-
-    <filter-mapping>
-        <filter-name>request-cleanup</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>action-cleanup-delay</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
     <filter-mapping>
         <filter-name>profiling</filter-name>
         <url-pattern>*.jsp</url-pattern>
@@ -581,6 +627,8 @@
     <filter-mapping>
         <filter-name>login</filter-name>
         <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher> <!-- we want security/login to be applied after urlrewrites, for example -->
     </filter-mapping>
 
     <filter-mapping>
@@ -591,6 +639,8 @@
     <filter-mapping>
         <filter-name>security</filter-name>
         <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher> <!-- we want security to be applied after urlrewrites, for example -->
     </filter-mapping>
 
     <filter-mapping>
@@ -689,51 +739,49 @@
         <filter-name>JiraLastFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-    
 
-    <!-- =====================================================
-         LISTENERS FOLLOW : 
-         ===================================================== -->
 
-    <!--
-     This order is important for shutdown and startup, ie the ConsistencyLauncher will call "SHUTDOWN"
-     on a HSQL DB database, and so must be called 'after' the com.atlassian.jira.scheduler.JiraSchedulerLauncher
-    -->
+    <!-- SERVLET CONTEXT LISTENERS -->
 
+    <!-- This goes before the LauncherContextListener because parts of the LauncherContextListener expect
+         the ServletContextProvider to work. And this listener it was makes that work. -->
     <listener>
         <listener-class>com.atlassian.jira.web.ServletContextProviderListener</listener-class>
     </listener>
 
-    <!--
-     This listener runs startup checks and locks JIRA if problems are encountered.
+    <!-- Start up JIRA. This listener actually delegates to a bunch of JiraLaunchers to ensure
+         that JIRA starts as intended. -->
+    <listener>
+        <listener-class>com.atlassian.jira.startup.LauncherContextListener</listener-class>
+    </listener>
+
+    <!-- ========================================
+         DO NOT ADD ANY SERVLET CONTEXT LISTENERS
+
+         Unless you really know what you're doing. And if you think you do, you're probably wrong.
+         Because everything you thought you knew is wrong! Multitenancy is like (The Crying Game + The Usual Suspects) * 42.
+
+         The right place to add many context-listeners is now in the DefaultJiraLauncher which has to know when to do
+         what to make tenants happy.
+         ========================================
     -->
-    <listener>
-        <listener-class>com.atlassian.jira.startup.JiraStartupChecklistContextListener</listener-class>
-    </listener>
 
-    <!-- Check consistency of database etc -->
-    <listener>
-        <listener-class>com.atlassian.jira.upgrade.ConsistencyLauncher</listener-class>
-    </listener>
-
-    <!-- Check for upgrades, and automatically perform them if neccessary. -->
-    <listener>
-        <listener-class>com.atlassian.jira.upgrade.UpgradeLauncher</listener-class>
-    </listener>
-
-    <!-- Launch the scheduler, which loads all the jobs from scheduler-config.xml -->
-    <listener>
-        <listener-class>com.atlassian.jira.scheduler.JiraSchedulerLauncher</listener-class>
-    </listener>
+    <!-- SESSION LISTENERS
+         Session listeners are multi-tenant copacetic. -->
 
     <!-- XML-RPC / SOAP Listener -->
     <listener>
         <listener-class>com.atlassian.jira.soap.axis.JiraAxisHttpListener</listener-class>
     </listener>
 
-    <!-- The JIRA user session tracker support -->
+    <!-- The JIRA user session tracker support. -->
     <listener>
         <listener-class>com.atlassian.jira.web.session.currentusers.JiraUserSessionDestroyListener</listener-class>
+    </listener>
+
+    <!-- Multi-Tenant session fixation prevention -->
+    <listener>
+        <listener-class>com.atlassian.multitenant.servlet.MultiTenantSessionListener</listener-class>
     </listener>
 
     <!-- servlets -->
@@ -827,16 +875,6 @@
         </init-param>
     </servlet>
 
-    <!-- IE6 expects CSS files to end with .css (JRA-3747) -->
-    <servlet>
-        <servlet-name>global.css</servlet-name>
-        <jsp-file>/styles/global_css.jsp</jsp-file>
-        <init-param>
-            <param-name>fork</param-name>
-            <param-value>false</param-value>
-        </init-param>
-    </servlet>
-
     <servlet>
         <servlet-name>calendar.css</servlet-name>
         <jsp-file>/includes/js/calendar/skins/aqua/theme.jsp</jsp-file>
@@ -886,7 +924,12 @@
         <servlet-name>attachmentzip</servlet-name>
         <servlet-class>com.atlassian.jira.web.servlet.AttachmentZipServlet</servlet-class>
     </servlet>
-    
+
+    <!-- Multi-Tenant -->
+    <servlet>
+        <servlet-name>multitenant</servlet-name>
+        <servlet-class>com.atlassian.multitenant.servlet.MultiTenantServlet</servlet-class>
+    </servlet>
 
     <!-- JCAPTCHA -->
     <servlet>
@@ -906,7 +949,7 @@
         <servlet-name>attachmentzip</servlet-name>
         <url-pattern>/secure/attachmentzip/*</url-pattern>
     </servlet-mapping>
-    
+
     <servlet-mapping>
         <servlet-name>file-server</servlet-name>
         <url-pattern>/download/*</url-pattern>
@@ -915,11 +958,6 @@
     <servlet-mapping>
         <servlet-name>calendar.css</servlet-name>
         <url-pattern>/styles/calendar.css</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>global.css</servlet-name>
-        <url-pattern>/styles/global.css</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
@@ -1043,9 +1081,14 @@
         <url-pattern>*.vmd</url-pattern>
     </servlet-mapping>
 
+    <servlet-mapping>
+        <servlet-name>multitenant</servlet-name>
+        <url-pattern>/multitenant/*</url-pattern>
+    </servlet-mapping>
+
     <!-- session config -->
     <session-config>
-        <session-timeout>60</session-timeout>
+        <session-timeout>300</session-timeout>
     </session-config>
 
     <!-- mime mapping -->
@@ -1084,6 +1127,7 @@
         <taglib>
             <taglib-uri>webwork</taglib-uri>
             <taglib-location>/WEB-INF/tld/webwork.tld</taglib-location>
+
         </taglib>
         <taglib>
             <taglib-uri>sitemesh-page</taglib-uri>
