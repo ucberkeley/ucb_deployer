@@ -72,11 +72,11 @@ module UcbDeployer
       end
     end
 
-    def self.deployer_home()
+    def deployer_home()
       ::UcbDeployer::DEPLOYER_HOME
     end
 
-    def self.resources_dir()
+    def resources_dir()
       ::UcbDeployer::RESOURCES_DIR
     end
 
