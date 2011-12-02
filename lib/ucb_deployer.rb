@@ -5,9 +5,9 @@ require 'ucb_deployer/deployer'
 require 'ucb_deployer/confluence_deployer'
 require 'ucb_deployer/jira_deployer'
 
+require 'ucb_deployer/config_tasks/jira/config_cas_auth'
 require 'ucb_deployer/config_tasks/jira/config_app_properties'
 require 'ucb_deployer/config_tasks/jira/config_jira_config_properties'
-require 'ucb_deployer/config_tasks/jira/config_cas_auth'
 require 'ucb_deployer/config_tasks/jira/config_ist_banner'
 require 'ucb_deployer/config_tasks/jira/remove_conflicting_jar_files'
 
@@ -56,13 +56,5 @@ module UcbDeployer
 
   def self.debug_mode=(bool)
     @debug_mode = bool
-  end
-
-  def self.deployer_home()
-    DEPLOYER_HOME
-  end
-
-  def self.resources_dir()
-    RESOURCES_DIR
   end
 end

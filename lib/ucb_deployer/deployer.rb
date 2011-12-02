@@ -24,18 +24,23 @@ module UcbDeployer
     
     
     def export()
+      raise NotImplementedError
     end
     
     def configure()
+      raise NotImplementedError
     end
 
     def build()
+      raise NotImplementedError
     end
 
     def rollback()
+      raise NotImplementedError
     end
     
     def deploy()
+      raise NotImplementedError
     end
 
     ##
@@ -66,7 +71,15 @@ module UcbDeployer
         end
       end
     end
-    
+
+    def self.deployer_home()
+      ::UcbDeployer::DEPLOYER_HOME
+    end
+
+    def self.resources_dir()
+      ::UcbDeployer::RESOURCES_DIR
+    end
+
     def debug(str)
       UcbDeployer.debug(str)
     end

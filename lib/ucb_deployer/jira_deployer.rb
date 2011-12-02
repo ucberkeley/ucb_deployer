@@ -19,11 +19,8 @@ module UcbDeployer
     
     def configure()
       self.info("Configuring application.")
-      ConfigCasAuth.new(self).execute()
-      ConfigAppProperties.new(self).execute()
-      ConfigJiraConfigProperties.new(self).execute()
-      ConfigIstBanner.new(self).execute()
-      RemoveConflictingJarFiles.new(self).execute()
+      tasks = self.load_tasks()
+      self.execute_config_tasks(tasks)
     end
 
     def build()
@@ -47,6 +44,30 @@ module UcbDeployer
     def rollback()
     end
 
+
+protected
+
+    def load_tasks()
+      tasks_path = "#{File.expand_path(File.dirname(__FILE__))}/config_tasks/jira/"
+      Dir.entries(tasks_path).select { |file| file.match(/^[a-z]/) }
+    end
+
+    def file_name_to_class_name(filename)
+      filename.gsub(/\.rb/, "").split("_").map(&:capitalize).join()
+    end
+
+    def execute_config_tasks(tasks)
+      UcbDeployer::ConfigTasks::Jira::ConfigIstBanner.new(self).execute()
+      UcbDeployer::ConfigTasks::Jira::ConfigCasAuth.new(self).execute()
+      UcbDeployer::ConfigTasks::Jira::ConfigJiraConfigProperties.new(self).execute()
+      UcbDeployer::ConfigTasks::Jira::ConfigAppProperties.new(self).execute()
+      UcbDeployer::ConfigTasks::Jira::RemoveConflictingJarFiles.new(self).execute()
+      #tasks.each do |task|
+      #  klass_name = self.file_name_to_class_name(task)
+      #  klass = ::Kernel.const_get("UcbDeployer::ConfigTasks::Jira::#{klass_name}")
+      #  klass.new(self).execute()
+      #end
+    end
   end
 end
 

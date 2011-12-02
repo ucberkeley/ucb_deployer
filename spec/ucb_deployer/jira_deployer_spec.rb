@@ -25,6 +25,9 @@ describe UcbDeployer::JiraDeployer do
       lambda { @jdep.load_config(@bad_deploy_file) }.should raise_error(UcbDeployer::ConfigError)
     end
 
+    #it "should execute all the config tasks" do
+    #  @jdep.configure()
+    #end
   end
 
   describe "#build" do
@@ -49,7 +52,7 @@ describe UcbDeployer::JiraDeployer do
 end
 
 
-describe UcbDeployer::ConfigTasks do
+describe UcbDeployer::ConfigTasks::Jira do
   before(:each) do
     @config = mock("config", {
         :resources_dir => UcbDeployer::RESOURCES_DIR,
@@ -62,7 +65,7 @@ describe UcbDeployer::ConfigTasks do
   end
 
   it "should configure cas authentication" do
-    task = UcbDeployer::ConfigTasks::ConfigCasAuth.new(@config)
+    task = UcbDeployer::ConfigTasks::Jira::ConfigCasAuth.new(@config)
     task.execute()
 
     lines = File.readlines(task.seraph_config_path())
@@ -77,7 +80,7 @@ describe UcbDeployer::ConfigTasks do
   end
 
   it "should remove conflicing jar file" do
-    task = UcbDeployer::ConfigTasks::RemoveConflictingJarFiles.new(@config)
+    task = UcbDeployer::ConfigTasks::Jira::RemoveConflictingJarFiles.new(@config)
     task.execute()
 
     Dir["#{@config.build_dir}/src/edit-webapp/WEB-INF/lib/soulwing-casclient-*"].should_not be_empty
@@ -87,14 +90,14 @@ describe UcbDeployer::ConfigTasks do
   end
 
   it "should configure the ist banner image" do
-    task = UcbDeployer::ConfigTasks::ConfigIstBanner.new(@config)
+    task = UcbDeployer::ConfigTasks::Jira::ConfigIstBanner.new(@config)
     task.execute()
 
     File.exists?("#{@config.build_dir()}/src/webapp/images/ist_banner.jpg").should be_true
   end
 
   it "should configure the jira-config.properties file" do
-    task = UcbDeployer::ConfigTasks::ConfigJiraConfigProperties.new(@config)
+    task = UcbDeployer::ConfigTasks::Jira::ConfigJiraConfigProperties.new(@config)
     task.execute()
 
     lines = File.readlines(task.jira_config_properties_path())
@@ -102,7 +105,7 @@ describe UcbDeployer::ConfigTasks do
   end
 
   it "should configure the jira-application.properties file" do
-    task = UcbDeployer::ConfigTasks::ConfigAppProperties.new(@config)
+    task = UcbDeployer::ConfigTasks::Jira::ConfigAppProperties.new(@config)
     task.execute()
 
     lines = File.readlines(task.jira_app_properties_path())
