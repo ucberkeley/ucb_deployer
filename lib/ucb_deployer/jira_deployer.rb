@@ -1,4 +1,3 @@
-
 module UcbDeployer
   class JiraDeployer < Deployer
     
@@ -19,12 +18,14 @@ module UcbDeployer
     
     def configure()
       self.info("Configuring application.")
+
       tasks = self.load_tasks()
       self.execute_config_tasks(tasks)
     end
 
     def build()
       self.info("Building application.")
+
       Dir.chdir("#{self.build_dir()}/src") { `sh #{self.build_dir()}/src/build.sh` }
     end
 
@@ -48,8 +49,21 @@ module UcbDeployer
 protected
 
     def load_tasks()
-      tasks_path = "#{File.expand_path(File.dirname(__FILE__))}/config_tasks/jira/"
-      Dir.entries(tasks_path).select { |file| file.match(/^[a-z]/) }
+      # TODO: Automatically load tasks so we don't have to manually specify each one
+      #
+      #tasks_path = "#{File.expand_path(File.dirname(__FILE__))}/config_tasks/jira/"
+      #Dir.entries(tasks_path).select { |file| file.match(/^[a-z]/) }
+      #tasks.each do |task|
+      #  klass_name = self.file_name_to_class_name(task)
+      #  klass = ::Kernel.const_get("UcbDeployer::ConfigTasks::Jira::#{klass_name}")
+      #  klass.new(self).execute()
+      #end
+
+      [ UcbDeployer::ConfigTasks::Jira::ConfigIstBanner.new(self),
+        UcbDeployer::ConfigTasks::Jira::ConfigCasAuth.new(self),
+        UcbDeployer::ConfigTasks::Jira::ConfigJiraConfigProperties.new(self),
+        UcbDeployer::ConfigTasks::Jira::ConfigAppProperties.new(self),
+        UcbDeployer::ConfigTasks::Jira::RemoveConflictingJarFiles.new(self), ]
     end
 
     def file_name_to_class_name(filename)
@@ -57,16 +71,7 @@ protected
     end
 
     def execute_config_tasks(tasks)
-      UcbDeployer::ConfigTasks::Jira::ConfigIstBanner.new(self).execute()
-      UcbDeployer::ConfigTasks::Jira::ConfigCasAuth.new(self).execute()
-      UcbDeployer::ConfigTasks::Jira::ConfigJiraConfigProperties.new(self).execute()
-      UcbDeployer::ConfigTasks::Jira::ConfigAppProperties.new(self).execute()
-      UcbDeployer::ConfigTasks::Jira::RemoveConflictingJarFiles.new(self).execute()
-      #tasks.each do |task|
-      #  klass_name = self.file_name_to_class_name(task)
-      #  klass = ::Kernel.const_get("UcbDeployer::ConfigTasks::Jira::#{klass_name}")
-      #  klass.new(self).execute()
-      #end
+      tasks.each { |task| task.execute() }
     end
   end
 end

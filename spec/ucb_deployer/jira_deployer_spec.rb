@@ -25,9 +25,12 @@ describe UcbDeployer::JiraDeployer do
       lambda { @jdep.load_config(@bad_deploy_file) }.should raise_error(UcbDeployer::ConfigError)
     end
 
-    #it "should execute all the config tasks" do
-    #  @jdep.configure()
-    #end
+    it "should execute all the config tasks" do
+      task = mock("task", {:execute => true})
+      task.should_receive(:execute)
+      @jdep.stub!(:load_tasks).and_return([task])
+      @jdep.configure()
+    end
   end
 
   describe "#build" do
