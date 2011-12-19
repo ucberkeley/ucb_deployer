@@ -2,7 +2,7 @@
 module UcbDeployer
   class ConfluenceDeployer < Deployer
     
-    def initialize(config_file = "#{ENV['HOME']}/config/confluence/deploy.yml")
+    def initialize(config_file = "#{ENV['HOME']}/.ucb_deployer/config/confluence/deploy.yml")
       debug("Using config file: #{config_file}")
       debug("")
       load_config(config_file)
